@@ -220,11 +220,21 @@ const Dashboard = () => {
                           callbacks: {
                             label: function (context) {
                               const asset = assetsIDR[context.dataIndex];
+                              const total = assetsIDR.reduce(
+                                (sum, a) => sum + a.total_spent,
+                                0
+                              );
+                              const percentage =
+                                total > 0
+                                  ? ((asset.total_spent / total) * 100).toFixed(
+                                      2
+                                    )
+                                  : 0;
                               return [
                                 `${asset.asset_name}: ${formatCurrency(
                                   asset.total_spent,
                                   "IDR"
-                                )}`,
+                                )} (${percentage}%)`,
                                 `Qty: ${
                                   asset.total_quantity > 0
                                     ? asset.total_quantity.toLocaleString()
@@ -287,11 +297,21 @@ const Dashboard = () => {
                           callbacks: {
                             label: function (context) {
                               const asset = assetsUSD[context.dataIndex];
+                              const total = assetsUSD.reduce(
+                                (sum, a) => sum + a.total_spent,
+                                0
+                              );
+                              const percentage =
+                                total > 0
+                                  ? ((asset.total_spent / total) * 100).toFixed(
+                                      2
+                                    )
+                                  : 0;
                               return [
                                 `${asset.asset_name}: ${formatCurrency(
                                   asset.total_spent,
                                   "USD"
-                                )}`,
+                                )} (${percentage}%)`,
                                 `Qty: ${
                                   asset.total_quantity > 0
                                     ? asset.total_quantity.toLocaleString()
