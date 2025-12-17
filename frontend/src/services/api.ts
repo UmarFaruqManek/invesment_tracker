@@ -21,6 +21,20 @@ const api = {
   },
 
   /**
+   * GET transaksi by ID
+   * @param {number} id - Transaction ID
+   */
+  getTransactionById: async (id) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/transactions/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching transaction:", error);
+      throw error;
+    }
+  },
+
+  /**
    * POST transaksi baru dengan file upload
    * @param {FormData} formData - Form data dengan fields dan file
    */

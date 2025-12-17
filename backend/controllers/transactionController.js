@@ -112,6 +112,122 @@ const TransactionController = {
   },
 
   /**
+   * GET /api/transactions/:id
+   * Mendapatkan transaksi berdasarkan ID
+   */
+  getTransactionById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const transaction = await TransactionModel.getById(id);
+
+      if (!transaction) {
+        return res.status(404).json({
+          success: false,
+          message: "Transaksi tidak ditemukan",
+        });
+      }
+
+      res.json({
+        success: true,
+        data: transaction,
+      });
+    } catch (error) {
+      console.error("Error getting transaction:", error);
+      res.status(500).json({
+        success: false,
+        message: "Gagal mengambil data transaksi",
+        error: error.message,
+      });
+    }
+  },
+
+  /**
+   * PUT /api/transactions/:id
+   * Update transaksi berdasarkan ID
+   */
+  updateTransaction: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const {
+        asset_name,
+        asset_type,
+        quantity,
+        price_per_unit,
+        total_spent,
+        currency,
+        date,
+      } = req.body;
+
+      // Check if transaction exists
+      const existingTransaction = await TransactionModel.getById(id);
+      if (!existingTransaction) {
+        return res.status(404).json({
+          success: false,
+          message: "Transaksi tidak ditemukan",
+        });
+      }
+
+      // Validasi input
+      if (!asset_name || !asset_type || !date || !currency) {
+        return res.status(400).json({
+          success: false,
+          message: "Field wajib: asset_name, asset_type, date, currency",
+        });
+      }
+
+      // Handle file upload - if new file uploaded, delete old one
+      let proof_path = existingTransaction.proof_path;
+      if (req.file) {
+        // Delete old file if exists
+        if (existingTransaction.proof_path) {
+          const oldFilePath = path.join(
+            __dirname,
+            "..",
+            existingTransaction.proof_path
+          );
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+          }
+        }
+        proof_path = "/" + req.file.path.replace(/\\/g, "/");
+      }
+
+      const transactionData = {
+        asset_name,
+        asset_type,
+        quantity: quantity ? parseFloat(quantity) : null,
+        price_per_unit: price_per_unit ? parseFloat(price_per_unit) : null,
+        total_spent: parseFloat(total_spent),
+        currency,
+        date,
+        proof_path,
+      };
+
+      const result = await TransactionModel.update(id, transactionData);
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Transaksi tidak ditemukan atau tidak ada perubahan",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Transaksi berhasil diupdate",
+        data: { id: parseInt(id), ...transactionData },
+      });
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      res.status(500).json({
+        success: false,
+        message: "Gagal mengupdate transaksi",
+        error: error.message,
+      });
+    }
+  },
+
+  /**
    * DELETE /api/transactions/:id
    * Hapus transaksi berdasarkan ID
    */

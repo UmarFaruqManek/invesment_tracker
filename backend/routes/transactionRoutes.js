@@ -27,6 +27,22 @@ router.post(
 );
 
 /**
+ * GET /api/transactions/:id
+ * Mendapatkan transaksi berdasarkan ID
+ */
+router.get("/transactions/:id", TransactionController.getTransactionById);
+
+/**
+ * PUT /api/transactions/:id
+ * Update transaksi berdasarkan ID
+ */
+router.put(
+  "/transactions/:id",
+  upload.single("proof"),
+  TransactionController.updateTransaction
+);
+
+/**
  * DELETE /api/transactions/:id
  * Hapus transaksi berdasarkan ID
  */

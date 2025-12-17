@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
+import ConfirmModal from "../components/ConfirmModal";
 
 const Transactions = () => {
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState(null);
 
   useEffect(() => {
     loadTransactions();
@@ -27,21 +31,30 @@ const Transactions = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
-      return;
-    }
+    setTransactionToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!transactionToDelete) return;
 
     try {
-      setDeleteLoading(id);
-      await api.deleteTransaction(id);
-      setTransactions(transactions.filter((t) => t.id !== id));
-      alert("Transaksi berhasil dihapus");
+      setDeleteLoading(transactionToDelete);
+      await api.deleteTransaction(transactionToDelete);
+      setTransactions(transactions.filter((t) => t.id !== transactionToDelete));
+      setShowDeleteModal(false);
+      setTransactionToDelete(null);
     } catch (err) {
       alert("Gagal menghapus transaksi");
       console.error(err);
     } finally {
       setDeleteLoading(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setTransactionToDelete(null);
   };
 
   const formatCurrency = (amount, currency) => {
@@ -177,17 +190,31 @@ const Transactions = () => {
                       )}
                     </td>
                     <td>
-                      <button
-                        onClick={() => handleDelete(transaction.id)}
-                        disabled={deleteLoading === transaction.id}
-                        className="btn btn-danger"
-                        style={{
-                          padding: "0.25rem 0.75rem",
-                          fontSize: "0.875rem",
-                        }}
-                      >
-                        {deleteLoading === transaction.id ? "..." : "Hapus"}
-                      </button>
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <button
+                          onClick={() =>
+                            navigate(`/edit-transaction/${transaction.id}`)
+                          }
+                          className="btn btn-primary"
+                          style={{
+                            padding: "0.25rem 0.75rem",
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(transaction.id)}
+                          disabled={deleteLoading === transaction.id}
+                          className="btn btn-danger"
+                          style={{
+                            padding: "0.25rem 0.75rem",
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          {deleteLoading === transaction.id ? "..." : "Hapus"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -213,6 +240,18 @@ const Transactions = () => {
           </div>
         </>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Hapus Transaksi?"
+        message="Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan."
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        isDanger={true}
+      />
     </div>
   );
 };
